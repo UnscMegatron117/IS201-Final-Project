@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+        }
+        #pongCanvas {
+            border: 5px solid #fff;
+        }
+        #controls {
+            margin: 10px;
+        }
+        #scoreboard {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            color: white;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        #message {
+            color: white;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        #speedOptions {
+            color: white;
+            font-size: 30px;
+            margin-bottom: 10px;
+        }
+        #pointDisplay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            display: none;
+            text-align: center;
+        }
+        #playerScore {
+        font-size: 36px; /* Increase the font size */
+        font-weight: bold; /* Make the text bold (optional) */
+        color: white; /* Keep it visible */
+        }
+        #aiScore {
+        font-size: 36px; /* Match the player's count size */
+        font-weight: bold;
+        color: white;
+        }
+        #HomeLink {
+            font-size: 30px;
+            color: black;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="scoreboard">
+        <div id="playerScore">Player: 0</div>
+        <div id="aiScore">AI: 0</div>
+    </div>
+    <div id="speedOptions">
+        <label>Select Speed:</label>
+        <button onclick="setSpeed('slow')">Slow</button>
+        <button onclick="setSpeed('normal')">Normal</button>
+        <button onclick="setSpeed('fast')">Fast</button>
+    </div>
+    <button id="startButton" style="display: none;">Start Game</button>
+    <div id="message"></div>
+    <canvas id="pongCanvas"></canvas>
+    <h1 id="pointDisplay"></h1>
+    <br>
+    <button><a id="HomeLink"href="scratch.html">Home Page</a></button>
+    
+    <script>
+        const canvas = document.getElementById('pongCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const playerScoreDisplay = document.getElementById('playerScore');
+        const aiScoreDisplay = document.getElementById('aiScore');
+        const messageDisplay = document.getElementById('message');
+        const pointDisplay = document.getElementById('pointDisplay');
+
+        let playerScore = 0;
+        let aiScore = 0;
+        let gameRunning = false;
+
+        // Ball speed variables
+        let ballSpeed = { dx: 2, dy: 2 }; // Default to slow
+
+        // Set canvas dimensions
+        canvas.width = 800;
+        canvas.height = 400;
+
+        // Paddle and ball settings
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+        const ballSize = 10;
+
+        const playerPaddle = { x: 10, y: canvas.height / 2 - paddleHeight / 2, speed: 0 };
+        const aiPaddle = { x: canvas.width - 20, y: canvas.height / 2 - paddleHeight / 2 };
+        const ball = { x: canvas.width / 2, y: canvas.height / 2, dx: ballSpeed.dx, dy: ballSpeed.dy };
+
+        function drawPaddle(paddle) {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(paddle.x, paddle.y, paddleWidth, paddleHeight);
+        }
+
+        function drawBall() {
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ballSize, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function moveBall() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Bounce off top and bottom walls
+            if (ball.y <= ballSize || ball.y >= canvas.height - ballSize) ball.dy *= -1;
+
+            // Detect collision with paddles
+            if (ball.x <= playerPaddle.x + paddleWidth && ball.y >= playerPaddle.y && ball.y <= playerPaddle.y + paddleHeight) ball.dx *= -1;
+            if (ball.x >= aiPaddle.x - paddleWidth && ball.y >= aiPaddle.y && ball.y <= aiPaddle.y + paddleHeight) ball.dx *= -1;
+
+            // Check if the ball hits a side
+            if (ball.x < 0) {
+                aiScore++;
+                showPointMessage('AI');
+                updateScore('AI');
+                resetBall();
+            } else if (ball.x > canvas.width) {
+                playerScore++;
+                showPointMessage('Player');
+                updateScore('Player');
+                resetBall();
+            }
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = ballSpeed.dx; // Reset speed
+            ball.dy = ballSpeed.dy;
+            gameRunning = false; // Pause the game after a point
+        }
+
+        function updateScore(winner) {
+            playerScoreDisplay.textContent = `Player: ${playerScore}`;
+            aiScoreDisplay.textContent = `AI: ${aiScore}`;
+            checkGameEnd(); // add this call to see if game should end
+        }
+
+        function movePaddles() {
+            aiPaddle.y += ball.dy * 0.6; // Simple AI logic
+            playerPaddle.y += playerPaddle.speed;
+
+            // Prevent paddles from going out of bounds
+            playerPaddle.y = Math.max(0, Math.min(canvas.height - paddleHeight, playerPaddle.y));
+            aiPaddle.y = Math.max(0, Math.min(canvas.height - paddleHeight, aiPaddle.y));
+        }
+
+        function handlePlayerInput(event) {
+            if (event.key === 'ArrowUp') playerPaddle.speed = -6;
+            if (event.key === 'ArrowDown') playerPaddle.speed = 6;
+        }
+
+        function stopPlayerInput(event) {
+            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') playerPaddle.speed = 0;
+        }
+
+        function setSpeed(speed) {
+            if (speed === 'slow') ballSpeed = { dx: 2, dy: 2 };
+            if (speed === 'normal') ballSpeed = { dx: 5, dy: 5 };
+            if (speed === 'fast') ballSpeed = { dx: 8, dy: 8 };
+
+            messageDisplay.textContent = `Speed selected: ${speed}`;
+            startButton.style.display = 'block'; // Show the start button
+        }
+
+        function showPointMessage(winner) {
+        pointDisplay.textContent = `Point ${winner}`;
+        pointDisplay.style.display = 'block'; // Show the message
+
+        setTimeout(() => {
+            pointDisplay.style.display = 'none'; // Hide the message after 1.5 seconds
+        }, 3000); // Wait 3 seconds
+        resetBall(); // Reset the ball 3 seconds after displaying the point
+        }
+
+        function resetBall() {
+        ball.x = canvas.width / 2;
+        ball.y = canvas.height / 2;
+        ball.dx = ballSpeed.dx; // Reset speed
+        ball.dy = ballSpeed.dy;
+        }
+
+
+        function gameLoop() {
+            if (!gameRunning) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPaddle(playerPaddle);
+            drawPaddle(aiPaddle);
+            drawBall();
+            moveBall();
+            movePaddles();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function checkGameEnd() {
+        if (playerScore >= 5) {
+        endGame("Player");
+        } else if (aiScore >= 5) {
+        endGame("AI");
+            }
+        }
+
+        function endGame(winner) {
+        // Stop the game
+        gameRunning = false;
+
+        // Display the "Game Over" message
+        pointDisplay.textContent = `Game Over! Winner: ${winner}`;
+        pointDisplay.style.display = 'block';
+
+        // Optionally reset scores or provide a restart mechanism
+        playerScore = 0;
+        aiScore = 0;
+        }
+
+        // Start the game
+        startButton.addEventListener('click', () => {
+            gameRunning = true;
+            messageDisplay.textContent = '';
+            ball.dx = ballSpeed.dx;
+            ball.dy = ballSpeed.dy;
+            gameLoop();
+        });
+
+        // Event listeners for player control
+        document.addEventListener('keydown', handlePlayerInput);
+        document.addEventListener('keyup', stopPlayerInput);
+    </script>
+</body>
+</html>

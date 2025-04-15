@@ -1,0 +1,43 @@
+.header{
+    font-weight: bold;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 75px;
+}
+.p{
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+}
+#top{
+    font-weight: bold;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 60px;
+}
+.gamorra{
+    font-style: italic;
+    color: red;
+    font-size: 20px;
+}
+body{
+    background-color: bisque;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    text-align: center;
+    border: 5px solid red;
+    margin: 20px;
+    padding: 10px;
+}
+.yuh{
+    padding-left: 0;
+    list-style-position: outside;
+    margin-left: 400px;
+    display: table;
+    text-align: left;
+    font-style: italic;
+    color: orangered;
+    font-size: 25px;
+}
+.links{
+    color: red;
+    font-size: large;
+    font-weight: bold;
+}
